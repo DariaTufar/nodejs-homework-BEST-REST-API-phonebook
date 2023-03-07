@@ -8,7 +8,10 @@ async function getAllContacts(req, res) {
   const { _id: owner } = req.user;
   const { page = 1, limit = 20 } = req.query;
   const skip = (page - 1) * limit;
-  const result = await Contact.find({owner}, {skip, limit} ).populate("owner",  "name, email");
+  const result = await Contact.find({ owner }, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).populate("owner", "name, email");
   res.json(result);
 }
 
@@ -16,9 +19,9 @@ async function getAllContacts(req, res) {
 
 async function getContactById(req, res) {
   const { contactId } = req.params;
-  // const { _id: owner } = req.user;
-  // const result = await Contact.findOne({ _id: contactId });
-  const result = await Contact.findById( contactId);
+  const { _id: userId } = req.user;
+
+  const result = await Contact.findOne({ _id: contactId, owner: userId });
   if (!result) {
     throw HttpError(404, "Not Found");
   }
@@ -28,40 +31,49 @@ async function getContactById(req, res) {
 // ========= Add  Contact =======================
 
 async function addContact(req, res) {
-  console.log(req.user)
+  console.log(req.user);
   const { _id: owner } = req.user;
-  const result = await Contact.create({...req.body, owner});
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
 }
 
 // ========= Delete contact ======================
 
-async function removeContact (req, res)  {
-
-    const { contactId } = req.params;
-    const result = await Contact.findByIdAndRemove(contactId);
-    if (!result) {
-      throw HttpError(404, "Not found");
-    }
-    res.status(200).json({ message: "Contact was deleted successfully" });
-};
+async function removeContact(req, res) {
+  const { contactId } = req.params;
+  const { _id: userId } = req.user;
+  const result = await Contact.findOneAndRemove({
+    _id: contactId,
+    owner: userId,
+  });
+  if (!result) {
+    throw HttpError(404, "Not found");
+  }
+  res.status(200).json({ message: "Contact was deleted successfully" });
+}
 
 // ======== Update Whole  Contact ========================
-async function updateContact (req, res) {
-    const { name, email, phone } = req.body;
-     
-    const { contactId } = req.params;
+async function updateContact(req, res) {
+  const { name, email, phone } = req.body;
 
-    if (!name && !email && !phone) {
-      res.status(400).json({ message: '"message": "missing fields"' });
-    }
+  const { contactId } = req.params;
+  const { _id: userId } = req.user;
+  if (!name && !email && !phone) {
+    res.status(400).json({ message: '"message": "missing fields"' });
+  }
 
-    const result = await Contact.findByIdAndUpdate(contactId, req.body, {new:true});
-    if (!result) {
-      throw HttpError(404, "Not found");
+  const result = await Contact.findOneAndUpdate(
+    { _id: contactId, owner: userId },
+    req.body,
+    {
+      new: true,
     }
-    res.status(200).json(result);
-};
+  );
+  if (!result) {
+    throw HttpError(404, "Not found");
+  }
+  res.status(200).json(result);
+}
 
 // ======== Update Status of a  Contact as Favorite ========================
 
@@ -69,20 +81,24 @@ async function updateFavorite(req, res) {
   const { favorite } = req.body;
 
   const { contactId } = req.params;
+  const { _id: userId } = req.user;
 
-  if (!favorite  ) {
+  if (!favorite) {
     res.status(400).json({ message: '"message": "missing fields"' });
   }
 
-  const result = await Contact.findByIdAndUpdate(contactId, req.body, {
-    new: true,
-  });
+  const result = await Contact.findOneAndUpdate(
+    { _id: contactId, owner: userId },
+    { favorite },
+    {
+      new: true,
+    }
+  );
   if (!result) {
     throw HttpError(404, "Not found");
   }
   res.status(200).json(result);
-};
-
+}
 
 module.exports = {
   getAllContacts: ctrlWrapper(getAllContacts),

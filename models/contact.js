@@ -3,29 +3,32 @@ const { handleMongooseError } = require("../helpers");
 
 const Joi = require("joi");
 
-const contactSchema = new Schema({
-  name: {
-    type: String,
-    required: [true, "Set name for contact"],
+const contactSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Set name for contact"],
+    },
+    email: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: String,
+      required: [true, "Set phone number for contact"],
+    },
+    favorite: {
+      type: Boolean,
+      default: false,
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
   },
-  email: {
-    type: String,
-    default: "",
-  },
-  phone: {
-    type: String,
-    required: [true, "Set phone number for contact"],
-  },
-  favorite: {
-    type: Boolean,
-    default: false,
-  },
-  owner: {
-    type: Schema.Types.ObjectId,
-    ref: "user",
-    required: true,
-  },
-});
+  { versionKey: false, timestamps: true }
+);
 
 contactSchema.post("save", handleMongooseError);
 //  ======Joi Schema for Body when Adding New Contact =====
