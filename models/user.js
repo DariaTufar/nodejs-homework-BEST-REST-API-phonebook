@@ -23,9 +23,13 @@ const userSchema = new Schema({
   },
   token: {
     type: String,
-    default: "" ,
+    default: "",
   },
-} );
+  avatarURL: {
+    type: String,
+    required: [true, "Avatar is required"],
+  },
+});
 
 userSchema.post("save", handleMongooseError);
 
@@ -33,14 +37,13 @@ const schemaSignUp = Joi.object({
   password: Joi.string().min(6).required(),
   email: Joi.string().required(),
   subscription: Joi.string().required(),
-//   token: Joi.string().required(),
+ 
 });
 
 const schemaLogin = Joi.object({
   password: Joi.string().min(6).required(),
   email: Joi.string().required(),
-//   subscription: Joi.string().required(),
-//   token: Joi.string().required(),
+ 
 });
 
 const User = model("user", userSchema);
