@@ -9,7 +9,14 @@ const { schemas } = require("../../models/user");
 
 // =============Registration of a user = Sign-Up ============================
  
-router.post("/signup", validateBody(schemas.schemaSignUp), ctrl.signup  );
+router.post("/signup", validateBody(schemas.schemaSignUp), ctrl.signup);
+
+// =============Verification  of Email after Sign-Up ============================
+
+router.get("/verify/:verificationToken", ctrl.verifyUserEmail);
+
+// =============Resend  of Verification Email after Sign-Up ============================
+router.post("/verify", validateBody(schemas.schemaEmail), ctrl.resendVerifyEmail);
 
 // =============Sign in =====================================================
 
